@@ -595,7 +595,7 @@ function addBuilding() {
           <div className="login-photo-side">
             <img src={loginPhoto} alt="Universum International College campus interior" />
             <div className="login-photo-overlay">
-              <p className="login-photo-quote">Manage the campus your students rely on.</p>
+              <p className="login-photo-quote">Your whole campus, one sign-in away.</p>
               <p className="login-photo-caption">Universum International College — Prishtina Campus</p>
             </div>
           </div>
