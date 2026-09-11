@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+﻿import React, { useState, useRef, useEffect } from "react";
 import {
   MessageCircle,
   Compass,
@@ -7,6 +7,7 @@ import {
   Search,
   Clock,
   Phone,
+  Mail,
   MapPin,
   ChevronDown,
   Sparkles,
@@ -14,6 +15,8 @@ import {
   Plus,
   Trash2,
   RotateCcw,
+  ThumbsUp,
+  ThumbsDown,
 } from "lucide-react";
 
 import { initializeApp, getApps } from "firebase/app";
@@ -33,6 +36,13 @@ import {
   signOut,
   onAuthStateChanged,
 } from "firebase/auth";
+
+import CampusMap from "./CampusMap";
+import DirectoryTab from "./DirectoryTab";
+import "./App.css";
+import campusHero from "./assets/campus/directory-hero.jpg";
+import loginPhoto from "./assets/campus/login-photo.jpg";
+import uniMark from "./assets/uni-mark.png";
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
@@ -121,67 +131,76 @@ const SEED_BUILDINGS = [
 
 const SEED_SERVICES = [
   {
-    id: "registrar",
-    name: "Registrar's Office",
-    building: "F — Administration Building, Room 110",
-    hours: "Mon–Fri, 08:00–16:00",
-    phone: "+383 44 000 111",
-    faqs: [
-      { q: "How do I register for classes?", a: "Log in to the student portal, select your program, and add courses during the registration window each semester." },
-      { q: "How do I request a transcript?", a: "Submit a request form at the Registrar's Office or through the student portal. Transcripts are ready within 3 business days." },
-    ],
+    id: "shkenca-kompjuterike",
+    name: "Departamenti Shkenca Kompjuterike",
+    email: "shkenca.kompjuterike@universum-ks.org",
+    building: "",
+    hours: "",
+    phone: "",
+    faqs: [],
   },
   {
-    id: "thesis",
-    name: "Thesis Coordination Office",
-    building: "F — Administration Building, Room 208",
-    hours: "Mon–Fri, 09:00–15:00",
-    phone: "+383 44 000 112",
-    faqs: [
-      { q: "How do I submit a thesis proposal?", a: "Complete the Thesis Proposal Form, get your mentor's signature, and submit it to the Thesis Coordinator for approval before registering for the thesis." },
-      { q: "Who approves my mentor?", a: "You find and confirm a mentor yourself, then list them on the Thesis Proposal Form for sign-off." },
-    ],
+    id: "kozmetologjii",
+    name: "Departamenti Kozmetologjii",
+    email: "kozmetologjii@universum-ks.org",
+    building: "",
+    hours: "",
+    phone: "",
+    faqs: [],
   },
   {
-    id: "finance",
-    name: "Student Finance Office",
-    building: "F — Administration Building, Room 204",
-    hours: "Mon–Fri, 08:30–15:30",
-    phone: "+383 44 000 113",
-    faqs: [
-      { q: "How do I pay tuition?", a: "Pay online through the student portal or in person at the Finance Office. Installment plans are available on request." },
-      { q: "How do I apply for a scholarship?", a: "Scholarship applications open each September — check the notice board in Building F or the student portal." },
-    ],
+    id: "biomjekesilaboratorike",
+    name: "Departamenti Biomjekesi Laboratorike",
+    email: "biomjekesilaboratorike@universum-ks.org",
+    building: "",
+    hours: "",
+    phone: "",
+    faqs: [],
   },
   {
-    id: "it",
-    name: "IT Help Desk",
-    building: "C — Computer Science Labs, Room C110",
-    hours: "Mon–Sat, 08:00–20:00",
-    phone: "+383 44 000 114",
-    faqs: [
-      { q: "I forgot my portal password.", a: "Use the 'Forgot password' link on the login page, or visit the Help Desk with your student ID for a manual reset." },
-      { q: "How do I connect to campus Wi-Fi?", a: "Select 'CampusNet', log in with your student email and portal password. Guest access is available at the front desk." },
-    ],
+    id: "biznes-menaxhment",
+    name: "Departamenti Biznes dhe Menaxhment",
+    email: "biznes.menaxhment@universum-ks.org",
+    building: "",
+    hours: "",
+    phone: "",
+    faqs: [],
   },
   {
-    id: "library",
-    name: "Library Services",
-    building: "B — Library & Study Center",
-    hours: "Mon–Sat, 08:00–22:00",
-    phone: "+383 44 000 115",
-    faqs: [
-      { q: "How many books can I borrow?", a: "Students can borrow up to 5 books for 14 days, renewable once online if no one else has requested them." },
-      { q: "Can I book a study room?", a: "Yes — group pods in Building B can be reserved up to 3 days in advance through the library booking board." },
-    ],
+    id: "datascience",
+    name: "Departamenti Data Science",
+    email: "datascience@universum-ks.org",
+    building: "",
+    hours: "",
+    phone: "",
+    faqs: [],
   },
   {
-    id: "career",
-    name: "Career Services",
-    building: "A — Main Building, Room A115",
-    hours: "Tue–Thu, 10:00–14:00",
-    phone: "+383 44 000 116",
-    faqs: [{ q: "Does the office help with internships?", a: "Yes — Career Services maintains a partner-employer list and reviews CVs by appointment." }],
+    id: "dentistri",
+    name: "Departamenti Dentistri",
+    email: "dentistri@universum-ks.org",
+    building: "",
+    hours: "",
+    phone: "",
+    faqs: [],
+  },
+  {
+    id: "dizajn",
+    name: "Departamenti Dizajn",
+    email: "dizajn@universum-ks.org",
+    building: "",
+    hours: "",
+    phone: "",
+    faqs: [],
+  },
+  {
+    id: "fizioterapi",
+    name: "Departamenti Fizioterapi",
+    email: "fizioterapi@universum-ks.org",
+    building: "",
+    hours: "",
+    phone: "",
+    faqs: [],
   },
 ];
 
@@ -191,30 +210,6 @@ const SUGGESTIONS = [
   "How do I reset my portal password?",
   "Where can I find the Computer Science labs?",
 ];
-
-function isOpenNow(b) {
-  const now = new Date();
-  const day = now.getDay();
-  const hour = now.getHours() + now.getMinutes() / 60;
-  const daySet = dayStringToSet(b.days || "");
-  return daySet.has(day) && hour >= b.open && hour < b.close;
-}
-
-function dayStringToSet(days) {
-  const map = { Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 };
-  const parts = days.split(/–|-/).map((s) => s.trim());
-  if (parts.length !== 2 || !(parts[0] in map) || !(parts[1] in map)) return new Set([1, 2, 3, 4, 5]);
-  const start = map[parts[0]];
-  const end = map[parts[1]];
-  const set = new Set();
-  let d = start;
-  while (true) {
-    set.add(d);
-    if (d === end) break;
-    d = (d + 1) % 7;
-  }
-  return set;
-}
 
 function uid(prefix) {
   return `${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`;
@@ -228,11 +223,25 @@ function AskTab({ buildings, services }) {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [feedback, setFeedback] = useState({});
   const scrollRef = useRef(null);
 
   useEffect(() => {
     if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
   }, [messages, loading]);
+
+  function rateFeedback(i, value) {
+    setFeedback((prev) => ({ ...prev, [i]: prev[i] === value ? null : value }));
+  }
+
+  function resetChat() {
+    setMessages([
+      { role: "assistant", content: "Hi, I'm SmartCampus AI. Ask me where a building is, when an office is open, or how to get something done on campus." },
+    ]);
+    setInput("");
+    setError("");
+    setFeedback({});
+  }
 
   async function sendMessage(text) {
     const trimmed = text.trim();
@@ -284,19 +293,61 @@ Services: ${JSON.stringify(services)}`;
 
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
-      <div className="hero">
-        <div className="hero-eyebrow"><Sparkles size={14} /><span>Campus assistant</span></div>
-        <h1 className="hero-title">Where to?</h1>
-        <p className="hero-sub">Ask about buildings, office hours, or how to get something done — SmartCampus AI knows the campus directory.</p>
+      <div className="hero" style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12 }}>
+        <div>
+          <div className="hero-eyebrow"><Sparkles size={14} /><span>Campus assistant</span></div>
+          <h1 className="hero-title">Where to?</h1>
+          <p className="hero-sub">Ask about buildings, office hours, or how to get something done — SmartCampus AI knows the campus directory.</p>
+        </div>
+        {messages.length > 1 && (
+          <button className="icon-btn" onClick={resetChat} aria-label="Start a new conversation" title="New conversation">
+            <RotateCcw size={16} />
+          </button>
+        )}
       </div>
 
       <div ref={scrollRef} className="chat-scroll">
-        {messages.map((m, i) => (
-          <div key={i} className={m.role === "user" ? "bubble bubble-user" : "bubble bubble-assistant"}>{m.content}</div>
-        ))}
+        {messages.map((m, i) =>
+          m.role === "user" ? (
+            <div key={i} className="bubble bubble-user">{m.content}</div>
+          ) : (
+            <div key={i} className="bubble-group">
+              <div className="bubble-row">
+                <div className="bubble-avatar"><img src={uniMark} alt="" /></div>
+                <div className="bubble bubble-assistant">{m.content}</div>
+              </div>
+              {i > 0 && (
+                <div className="feedback-row">
+                  <button
+                    className={`feedback-btn ${feedback[i] === "up" ? "feedback-btn-active-up" : ""}`}
+                    onClick={() => rateFeedback(i, "up")}
+                    aria-label="Helpful response"
+                    title="Helpful"
+                  >
+                    <ThumbsUp size={13} />
+                  </button>
+                  <button
+                    className={`feedback-btn ${feedback[i] === "down" ? "feedback-btn-active-down" : ""}`}
+                    onClick={() => rateFeedback(i, "down")}
+                    aria-label="Not helpful"
+                    title="Not helpful"
+                  >
+                    <ThumbsDown size={13} />
+                  </button>
+                  {feedback[i] && <span className="feedback-thanks">Thanks for the feedback!</span>}
+                </div>
+              )}
+            </div>
+          )
+        )}
         {loading && (
-          <div className="bubble bubble-assistant bubble-loading">
-            <span className="dot" /><span className="dot" /><span className="dot" />
+          <div className="bubble-group">
+            <div className="bubble-row">
+              <div className="bubble-avatar"><img src={uniMark} alt="" /></div>
+              <div className="bubble bubble-assistant bubble-loading">
+                <span className="dot" /><span className="dot" /><span className="dot" />
+              </div>
+            </div>
           </div>
         )}
       </div>
@@ -319,78 +370,19 @@ Services: ${JSON.stringify(services)}`;
   );
 }
 
-// --- DIRECTORY TAB ---
-function DirectoryTab({ buildings }) {
-  const [query, setQuery] = useState("");
-  const [activeCode, setActiveCode] = useState(null);
-
-  const filtered = buildings.filter((b) => {
-    const q = query.toLowerCase();
-    return (
-      (b.name && b.name.toLowerCase().includes(q)) ||
-      (b.category && b.category.toLowerCase().includes(q)) ||
-      (b.rooms && b.rooms.some((r) => r.toLowerCase().includes(q)))
-    );
-  });
-
-  return (
-    <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
-      <div className="section-header">
-        <h2 className="section-title">Campus directory</h2>
-        <p className="section-sub">{buildings.length} buildings, mapped by code — tap one to see what's inside.</p>
-      </div>
-
-      <div className="search-bar">
-        <Search size={16} className="search-icon" />
-        <input type="text" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search a building, room, or service..." className="search-input" />
-      </div>
-
-      <div className="map-strip">
-        {buildings.map((b) => (
-          <button key={b.code} className={`map-node ${activeCode === b.code ? "map-node-active" : ""}`} onClick={() => setActiveCode(activeCode === b.code ? null : b.code)} aria-label={`Building ${b.code} — ${b.name}`}>
-            <span className="map-code">{b.code}</span>
-          </button>
-        ))}
-      </div>
-
-      <div className="directory-list">
-        {filtered.length === 0 && <p className="empty-text">No matches. Try a different search term.</p>}
-        {filtered.map((b) => {
-          const open = isOpenNow(b);
-          const expanded = activeCode === b.code;
-          return (
-            <div key={b.code} className={`directory-card ${expanded ? "directory-card-open" : ""}`}>
-              <button className="directory-card-head" onClick={() => setActiveCode(expanded ? null : b.code)}>
-                <div className="directory-code">{b.code}</div>
-                <div className="directory-meta">
-                  <div className="directory-name">{b.name}</div>
-                  <div className="directory-sub">{b.category} · {b.floors}</div>
-                </div>
-                <span className={`status-pill ${open ? "status-open" : "status-closed"}`}>{open ? "Open now" : "Closed"}</span>
-                <ChevronDown size={18} className={`chevron ${expanded ? "chevron-open" : ""}`} />
-              </button>
-              {expanded && (
-                <div className="directory-card-body">
-                  <p className="directory-desc">{b.description}</p>
-                  <div className="directory-hours"><Clock size={14} /><span>{b.open}:00–{b.close}:00, {b.days}</span></div>
-                  <div className="room-list">
-                    {(b.rooms || []).map((r) => (
-                      <div key={r} className="room-item"><MapPin size={13} /><span>{r}</span></div>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
-
 // --- SERVICES TAB ---
 function ServicesTab({ services }) {
   const [openFaq, setOpenFaq] = useState(null);
+  const [query, setQuery] = useState("");
+
+  const filteredServices = services.filter((s) => {
+    const term = query.toLowerCase();
+    return (
+      s.name?.toLowerCase().includes(term) ||
+      s.building?.toLowerCase().includes(term) ||
+      s.email?.toLowerCase().includes(term)
+    );
+  });
 
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
@@ -399,41 +391,72 @@ function ServicesTab({ services }) {
         <p className="section-sub">Offices, hours, and answers to what students ask most.</p>
       </div>
 
+      <div className="search-bar">
+        <Search size={16} className="search-icon" />
+        <input
+          type="text"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="Search a service or office..."
+          className="search-input"
+        />
+      </div>
+
+      {filteredServices.length === 0 && (
+        <p className="empty-text">No services match "{query}".</p>
+      )}
+
       <div className="services-list">
-        {services.map((s) => (
+        {filteredServices.map((s) => (
           <div key={s.id} className="service-card">
             <div className="service-head">
               <Building2 size={18} className="service-icon" />
               <div>
                 <div className="service-name">{s.name}</div>
-                <div className="service-location">{s.building}</div>
+                {s.building && <div className="service-location">{s.building}</div>}
               </div>
             </div>
-            <div className="service-details">
-              <div className="service-detail-row"><Clock size={13} /><span>{s.hours}</span></div>
-              <div className="service-detail-row"><Phone size={13} /><span>{s.phone}</span></div>
-            </div>
-            <div className="faq-block">
-              {(s.faqs || []).map((f, idx) => {
-                const key = `${s.id}-${idx}`;
-                const expanded = openFaq === key;
-                return (
-                  <div key={key} className="faq-item">
-                    <button className="faq-question" onClick={() => setOpenFaq(expanded ? null : key)}>
-                      <span>{f.q}</span>
-                      <ChevronDown size={15} className={`chevron ${expanded ? "chevron-open" : ""}`} />
-                    </button>
-                    {expanded && <p className="faq-answer">{f.a}</p>}
+            {(s.hours || s.phone || s.email) && (
+              <div className="service-details">
+                {s.email && (
+                  <div className="service-detail-row">
+                    <Mail size={13} />
+                    <a href={`mailto:${s.email}`} className="service-email-link">{s.email}</a>
                   </div>
-                );
-              })}
-            </div>
+                )}
+                {s.hours && <div className="service-detail-row"><Clock size={13} /><span>{s.hours}</span></div>}
+                {s.phone && <div className="service-detail-row"><Phone size={13} /><span>{s.phone}</span></div>}
+              </div>
+            )}
+            {(s.faqs || []).length > 0 && (
+              <div className="faq-block">
+                {s.faqs.map((f, idx) => {
+                  const key = `${s.id}-${idx}`;
+                  const expanded = openFaq === key;
+                  return (
+                    <div key={key} className="faq-item">
+                      <button className="faq-question" onClick={() => setOpenFaq(expanded ? null : key)}>
+                        <span>{f.q}</span>
+                        <ChevronDown size={15} className={`chevron ${expanded ? "chevron-open" : ""}`} />
+                      </button>
+                      {expanded && <p className="faq-answer">{f.a}</p>}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
         ))}
       </div>
     </div>
   );
 }
+
+const ADMIN_CATEGORY_CLASS = {
+  Academic: "directory-code-academic",
+  Amenities: "directory-code-amenities",
+  Administrative: "directory-code-administrative",
+};
 
 // --- ADMIN TAB ---
 function AdminTab({ buildings, services, onSaveBuilding, onDeleteBuilding, onSaveService, onDeleteService, onReset, saveState }) {
@@ -499,7 +522,7 @@ function AdminTab({ buildings, services, onSaveBuilding, onDeleteBuilding, onSav
     onDeleteBuilding(code);
   }
 
-  function addBuilding() {
+function addBuilding() {
     if (!isAdminUser) return;
     const code = prompt("New building code (e.g. G):");
     if (!code) return;
@@ -518,8 +541,11 @@ function AdminTab({ buildings, services, onSaveBuilding, onDeleteBuilding, onSav
       close: 18,
       days: "Mon–Fri",
       rooms: [],
+      lat: null,
+      lng: null,
     });
   }
+  
 
   function updateService(id, patch) {
     if (!isAdminUser) return;
@@ -536,9 +562,7 @@ function AdminTab({ buildings, services, onSaveBuilding, onDeleteBuilding, onSav
 
   function addService() {
     if (!isAdminUser) return;
-    const name = prompt("New service name:");
-    if (!name) return;
-    onSaveService({ id: uid("svc"), name, building: "", hours: "", phone: "", faqs: [] });
+    onSaveService({ id: uid("svc"), name: "New department", email: "", building: "", hours: "", phone: "", faqs: [] });
   }
 
   function addFaq(serviceId) {
@@ -564,45 +588,62 @@ function AdminTab({ buildings, services, onSaveBuilding, onDeleteBuilding, onSav
     return (
       <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
         <div className="section-header">
-          <h2 className="section-title">Admin Login</h2>
-          <p className="section-sub">Sign in or register an account to manage campus data.</p>
+          <h2 className="section-title">Sign In</h2>
+          <p className="section-sub">Sign in with your student email, or create a new account.</p>
         </div>
-        <div style={{ maxWidth: 360, width: "100%", margin: "20px 0" }}>
-          <form style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-            <input
-              type="email"
-              className="admin-input"
-              placeholder="Admin Email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-            />
-            <input
-              type="password"
-              className="admin-input"
-              placeholder="Password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-            />
-            {authError && <div className="error-text">{authError}</div>}
-            <div style={{ display: "flex", gap: 10, marginTop: 4 }}>
-              <button
-                type="button"
-                className="admin-add"
-                style={{ flex: 1, justifyContent: "center" }}
-                onClick={handleSignIn}
-              >
-                Sign In
-              </button>
-              <button
-                type="button"
-                className="admin-toggle-btn"
-                style={{ flex: 1, justifyContent: "center" }}
-                onClick={handleSignUp}
-              >
-                Sign Up
-              </button>
+        <div className="login-wrap">
+          <div className="login-photo-side">
+            <img src={loginPhoto} alt="Universum International College campus interior" />
+            <div className="login-photo-overlay">
+              <p className="login-photo-quote">Manage the campus your students rely on.</p>
+              <p className="login-photo-caption">Universum International College — Prishtina Campus</p>
             </div>
-          </form>
+          </div>
+          <div className="login-form-side">
+            <div className="login-form-title">Welcome back</div>
+            <p className="login-form-sub">Students and staff can sign in here, or create a new account.</p>
+            <form style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+              <div className="field">
+                <label className="field-label">Email</label>
+                <input
+                  type="email"
+                  className="admin-input"
+                  placeholder="you@example.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                />
+              </div>
+              <div className="field">
+                <label className="field-label">Password</label>
+                <input
+                  type="password"
+                  className="admin-input"
+                  placeholder="••••••••"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                />
+              </div>
+              {authError && <div className="error-text">{authError}</div>}
+              <div style={{ display: "flex", gap: 10, marginTop: 4 }}>
+                <button
+                  type="button"
+                  className="admin-add"
+                  style={{ flex: 1, justifyContent: "center" }}
+                  onClick={handleSignIn}
+                >
+                  Sign In
+                </button>
+                <button
+                  type="button"
+                  className="admin-toggle-btn"
+                  style={{ flex: 1, justifyContent: "center" }}
+                  onClick={handleSignUp}
+                >
+                  Sign Up
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
       </div>
     );
@@ -612,11 +653,14 @@ function AdminTab({ buildings, services, onSaveBuilding, onDeleteBuilding, onSav
     <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
       <div className="section-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
         <div>
-          <h2 className="section-title">Admin</h2>
-          <p className="section-sub">
-            Logged in as {user.email} {isAdminUser ? "(Admin)" : "(Read-Only)"}
-            {saveState === "saving" && " Saving…"}
-            {saveState === "saved" && " Saved."}
+          <h2 className="section-title">{isAdminUser ? "Admin" : "My Account"}</h2>
+          <p className="section-sub" style={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: 6 }}>
+            <span>Logged in as {user.email}</span>
+            <span className={`role-pill ${isAdminUser ? "role-pill-admin" : ""}`}>
+              {isAdminUser ? "Admin" : "Student"}
+            </span>
+            {saveState === "saving" && <span>Saving…</span>}
+            {saveState === "saved" && <span>Saved.</span>}
           </p>
         </div>
         <button className="admin-toggle-btn" onClick={handleSignOut}>Sign Out</button>
@@ -631,11 +675,10 @@ function AdminTab({ buildings, services, onSaveBuilding, onDeleteBuilding, onSav
         <div className="admin-list">
           {buildings.map((b) => (
             <div key={b.code} className="admin-card">
-              <div className="admin-row">
-                <input className="admin-input admin-input-code" value={b.code} readOnly />
+              <div className="admin-card-header">
+                <div className={`directory-code ${ADMIN_CATEGORY_CLASS[b.category] || ""}`}>{b.code}</div>
                 <input
-                  className="admin-input"
-                  style={{ flex: 1 }}
+                  className="admin-input admin-input-name"
                   value={b.name}
                   onChange={(e) => updateBuilding(b.code, { name: e.target.value })}
                   placeholder="Building name"
@@ -648,55 +691,104 @@ function AdminTab({ buildings, services, onSaveBuilding, onDeleteBuilding, onSav
                 )}
               </div>
               <div className="admin-row">
-                <input
-                  className="admin-input"
-                  style={{ flex: 1 }}
-                  value={b.category}
-                  onChange={(e) => updateBuilding(b.code, { category: e.target.value })}
-                  placeholder="Category"
-                  readOnly={!isAdminUser}
-                />
-                <input
-                  className="admin-input"
-                  style={{ width: 90 }}
-                  type="number"
-                  value={b.open}
-                  onChange={(e) => updateBuilding(b.code, { open: Number(e.target.value) })}
-                  placeholder="Open"
-                  readOnly={!isAdminUser}
-                />
-                <input
-                  className="admin-input"
-                  style={{ width: 90 }}
-                  type="number"
-                  value={b.close}
-                  onChange={(e) => updateBuilding(b.code, { close: Number(e.target.value) })}
-                  placeholder="Close"
-                  readOnly={!isAdminUser}
-                />
-                <input
-                  className="admin-input"
-                  style={{ width: 100 }}
-                  value={b.days}
-                  onChange={(e) => updateBuilding(b.code, { days: e.target.value })}
-                  placeholder="Mon–Fri"
+                <div className="field" style={{ flex: 1 }}>
+                  <label className="field-label">Category</label>
+                  <input
+                    className="admin-input"
+                    value={b.category}
+                    onChange={(e) => updateBuilding(b.code, { category: e.target.value })}
+                    placeholder="Category"
+                    readOnly={!isAdminUser}
+                  />
+                </div>
+                <div className="field" style={{ width: 90 }}>
+                  <label className="field-label">Opens</label>
+                  <input
+                    className="admin-input"
+                    type="number"
+                    value={b.open}
+                    onChange={(e) => updateBuilding(b.code, { open: Number(e.target.value) })}
+                    placeholder="Open"
+                    readOnly={!isAdminUser}
+                  />
+                </div>
+                <div className="field" style={{ width: 90 }}>
+                  <label className="field-label">Closes</label>
+                  <input
+                    className="admin-input"
+                    type="number"
+                    value={b.close}
+                    onChange={(e) => updateBuilding(b.code, { close: Number(e.target.value) })}
+                    placeholder="Close"
+                    readOnly={!isAdminUser}
+                  />
+                </div>
+                <div className="field" style={{ width: 100 }}>
+                  <label className="field-label">Days</label>
+                  <input
+                    className="admin-input"
+                    value={b.days}
+                    onChange={(e) => updateBuilding(b.code, { days: e.target.value })}
+                    placeholder="Mon–Fri"
+                    readOnly={!isAdminUser}
+                  />
+                </div>
+              </div>
+              <div className="admin-row">
+                <div className="field" style={{ flex: 1 }}>
+                  <label className="field-label">Latitude</label>
+                  <input
+                    type="number"
+                    step="any"
+                    className="admin-input"
+                    value={b.lat ?? ""}
+                    onChange={(e) =>
+                      updateBuilding(b.code, {
+                        lat: e.target.value !== "" ? parseFloat(e.target.value) : null,
+                      })
+                    }
+                    placeholder="e.g. 42.6629"
+                    readOnly={!isAdminUser}
+                  />
+                </div>
+                <div className="field" style={{ flex: 1 }}>
+                  <label className="field-label">Longitude</label>
+                  <input
+                    type="number"
+                    step="any"
+                    className="admin-input"
+                    value={b.lng ?? ""}
+                    onChange={(e) =>
+                      updateBuilding(b.code, {
+                        lng: e.target.value !== "" ? parseFloat(e.target.value) : null,
+                      })
+                    }
+                    placeholder="e.g. 21.1655"
+                    readOnly={!isAdminUser}
+                  />
+                </div>
+              </div>
+              <div className="field" style={{ marginBottom: 8 }}>
+                <label className="field-label">Description</label>
+                <textarea
+                  className="admin-textarea"
+                  style={{ marginBottom: 0 }}
+                  value={b.description}
+                  onChange={(e) => updateBuilding(b.code, { description: e.target.value })}
+                  placeholder="Description"
                   readOnly={!isAdminUser}
                 />
               </div>
-              <textarea
-                className="admin-textarea"
-                value={b.description}
-                onChange={(e) => updateBuilding(b.code, { description: e.target.value })}
-                placeholder="Description"
-                readOnly={!isAdminUser}
-              />
-              <input
-                className="admin-input"
-                value={(b.rooms || []).join(", ")}
-                onChange={(e) => updateBuilding(b.code, { rooms: e.target.value.split(",").map((r) => r.trim()).filter(Boolean) })}
-                placeholder="Rooms, comma separated"
-                readOnly={!isAdminUser}
-              />
+              <div className="field">
+                <label className="field-label">Rooms</label>
+                <input
+                  className="admin-input"
+                  value={(b.rooms || []).join(", ")}
+                  onChange={(e) => updateBuilding(b.code, { rooms: e.target.value.split(",").map((r) => r.trim()).filter(Boolean) })}
+                  placeholder="Rooms, comma separated"
+                  readOnly={!isAdminUser}
+                />
+              </div>
             </div>
           ))}
           {isAdminUser && (
@@ -709,10 +801,10 @@ function AdminTab({ buildings, services, onSaveBuilding, onDeleteBuilding, onSav
         <div className="admin-list">
           {services.map((s) => (
             <div key={s.id} className="admin-card">
-              <div className="admin-row">
+              <div className="admin-card-header">
+                <div className="admin-service-icon"><Building2 size={16} /></div>
                 <input
-                  className="admin-input"
-                  style={{ flex: 1 }}
+                  className="admin-input admin-input-name"
                   value={s.name}
                   onChange={(e) => updateService(s.id, { name: e.target.value })}
                   placeholder="Service name"
@@ -724,32 +816,51 @@ function AdminTab({ buildings, services, onSaveBuilding, onDeleteBuilding, onSav
                   </button>
                 )}
               </div>
-              <input
-                className="admin-input"
-                value={s.building}
-                onChange={(e) => updateService(s.id, { building: e.target.value })}
-                placeholder="Location"
-                readOnly={!isAdminUser}
-              />
-              <div className="admin-row">
+              <div className="field" style={{ marginBottom: 8 }}>
+                <label className="field-label">Email</label>
                 <input
+                  type="email"
                   className="admin-input"
-                  style={{ flex: 1 }}
-                  value={s.hours}
-                  onChange={(e) => updateService(s.id, { hours: e.target.value })}
-                  placeholder="Hours"
-                  readOnly={!isAdminUser}
-                />
-                <input
-                  className="admin-input"
-                  style={{ flex: 1 }}
-                  value={s.phone}
-                  onChange={(e) => updateService(s.id, { phone: e.target.value })}
-                  placeholder="Phone"
+                  value={s.email ?? ""}
+                  onChange={(e) => updateService(s.id, { email: e.target.value })}
+                  placeholder="e.g. department@universum-ks.org"
                   readOnly={!isAdminUser}
                 />
               </div>
+              <div className="field" style={{ marginBottom: 8 }}>
+                <label className="field-label">Location</label>
+                <input
+                  className="admin-input"
+                  value={s.building}
+                  onChange={(e) => updateService(s.id, { building: e.target.value })}
+                  placeholder="Location (optional)"
+                  readOnly={!isAdminUser}
+                />
+              </div>
+              <div className="admin-row">
+                <div className="field" style={{ flex: 1 }}>
+                  <label className="field-label">Hours</label>
+                  <input
+                    className="admin-input"
+                    value={s.hours}
+                    onChange={(e) => updateService(s.id, { hours: e.target.value })}
+                    placeholder="Hours"
+                    readOnly={!isAdminUser}
+                  />
+                </div>
+                <div className="field" style={{ flex: 1 }}>
+                  <label className="field-label">Phone</label>
+                  <input
+                    className="admin-input"
+                    value={s.phone}
+                    onChange={(e) => updateService(s.id, { phone: e.target.value })}
+                    placeholder="Phone"
+                    readOnly={!isAdminUser}
+                  />
+                </div>
+              </div>
               <div className="admin-faqs">
+                <label className="field-label" style={{ display: "block", marginBottom: 8 }}>FAQs</label>
                 {(s.faqs || []).map((f, idx) => (
                   <div key={idx} className="admin-faq-row">
                     <span className="admin-faq-text">{f.q}</span>
@@ -788,13 +899,21 @@ const TABS = [
 ];
 
 export default function App() {
-  const [tab, setTab] = useState("admin");
+  const [tab, setTab] = useState("ask");
+  const [user, setUser] = useState(null);
   const [buildings, setBuildings] = useState([]);
   const [services, setServices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [saveState, setSaveState] = useState("idle");
+  const [selectedBuildingCode, setSelectedBuildingCode] = useState(null);
   const saveTimer = useRef(null);
 
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+    });
+    return () => unsubscribe();
+  }, []); 
   // Firestore Real-time Listeners with Seed Fallback
   useEffect(() => {
     const unsubBuildings = onSnapshot(collection(db, "buildings"), (snapshot) => {
@@ -891,133 +1010,34 @@ export default function App() {
 
   return (
     <div className="app-shell">
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&display=swap');
-        * { box-sizing: border-box; }
-        .app-shell {
-          --ink: #132A3A; --ink-soft: #24445B; --paper: #F6F3EC; --paper-card: #FFFFFF;
-          --amber: #D98E3F; --amber-dark: #A66427; --sage: #3E6B57; --sage-bg: #E4EEE8;
-          --coral: #B5482F; --coral-bg: #F6E4DF; --slate: #5B6572; --line: #DFDACD;
-          font-family: 'Inter', sans-serif; background: var(--paper); color: var(--ink);
-          width: 100%; height: 100vh; min-height: 640px; display: flex; overflow: hidden;
-        }
-        .rail { display: none; }
-        @media (min-width: 860px) {
-          .rail { display: flex; flex-direction: column; width: 220px; flex-shrink: 0; background: var(--ink); color: var(--paper); padding: 28px 18px; }
-          .rail-brand { display: flex; align-items: center; gap: 10px; margin-bottom: 40px; padding: 0 8px; }
-          .rail-brand-mark { width: 34px; height: 34px; border-radius: 8px; background: var(--amber); display: flex; align-items: center; justify-content: center; font-family: 'Space Grotesk', sans-serif; font-weight: 700; color: var(--ink); font-size: 16px; }
-          .rail-brand-text { font-family: 'Space Grotesk', sans-serif; font-weight: 600; font-size: 16px; }
-          .rail-nav { display: flex; flex-direction: column; gap: 4px; }
-          .rail-item { display: flex; align-items: center; gap: 12px; padding: 11px 12px; border-radius: 8px; color: rgba(246,243,236,0.65); background: transparent; border: none; cursor: pointer; font-family: 'Inter', sans-serif; font-size: 14px; font-weight: 500; text-align: left; }
-          .rail-item:hover { background: rgba(246,243,236,0.08); color: var(--paper); }
-          .rail-item-active { background: rgba(217,142,63,0.16); color: var(--amber); }
-          .rail-foot { margin-top: auto; font-size: 12px; color: rgba(246,243,236,0.4); padding: 0 8px; line-height: 1.5; }
-          .mobile-topbar { display: none !important; }
-          .tabbar { display: none !important; }
-          .content { padding: 0 !important; }
-        }
-        .main-col { flex: 1; display: flex; flex-direction: column; min-width: 0; height: 100%; }
-        .mobile-topbar { display: flex; align-items: center; gap: 10px; padding: 16px 20px; background: var(--ink); color: var(--paper); flex-shrink: 0; }
-        .mobile-topbar-mark { width: 28px; height: 28px; border-radius: 7px; background: var(--amber); display: flex; align-items: center; justify-content: center; font-family: 'Space Grotesk', sans-serif; font-weight: 700; color: var(--ink); font-size: 13px; }
-        .mobile-topbar-text { font-family: 'Space Grotesk', sans-serif; font-weight: 600; font-size: 15px; }
-        .content { flex: 1; overflow-y: auto; padding: 28px 32px 0; display: flex; flex-direction: column; min-height: 0; }
-        .hero { padding: 8px 4px 20px; flex-shrink: 0; }
-        .hero-eyebrow { display: flex; align-items: center; gap: 6px; color: var(--amber-dark); font-size: 13px; font-weight: 500; margin-bottom: 10px; }
-        .hero-title { font-family: 'Space Grotesk', sans-serif; font-size: 34px; font-weight: 700; margin: 0 0 8px; letter-spacing: -0.01em; }
-        .hero-sub { color: var(--slate); font-size: 14px; line-height: 1.5; margin: 0; max-width: 480px; }
-        .chat-scroll { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; padding: 4px 2px 16px; min-height: 120px; }
-        .bubble { max-width: 78%; padding: 11px 15px; border-radius: 14px; font-size: 14.5px; line-height: 1.5; }
-        .bubble-assistant { background: var(--paper-card); border: 1px solid var(--line); align-self: flex-start; border-bottom-left-radius: 4px; }
-        .bubble-user { background: var(--ink); color: var(--paper); align-self: flex-end; border-bottom-right-radius: 4px; }
-        .bubble-loading { display: flex; gap: 4px; align-items: center; padding: 14px 15px; }
-        .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--slate); opacity: 0.5; animation: pulse 1.2s infinite ease-in-out; }
-        .dot:nth-child(2) { animation-delay: 0.15s; }
-        .dot:nth-child(3) { animation-delay: 0.3s; }
-        @keyframes pulse { 0%, 80%, 100% { opacity: 0.3; } 40% { opacity: 1; } }
-        .suggestions { display: flex; flex-wrap: wrap; gap: 8px; padding: 0 2px 14px; flex-shrink: 0; }
-        .chip { border: 1px solid var(--line); background: var(--paper-card); color: var(--ink-soft); padding: 8px 13px; border-radius: 20px; font-size: 13px; cursor: pointer; font-family: 'Inter', sans-serif; }
-        .chip:hover { border-color: var(--amber); color: var(--amber-dark); }
-        .error-text { color: var(--coral); font-size: 12.5px; padding: 0 2px 8px; flex-shrink: 0; }
-        .composer { display: flex; gap: 8px; padding: 12px 2px 20px; flex-shrink: 0; }
-        .composer-input { flex: 1; border: 1px solid var(--line); background: var(--paper-card); padding: 12px 16px; border-radius: 24px; font-size: 14px; color: var(--ink); outline: none; font-family: 'Inter', sans-serif; }
-        .composer-send { width: 42px; height: 42px; border-radius: 50%; background: var(--amber); color: var(--ink); border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-        .composer-send:disabled { opacity: 0.4; cursor: not-allowed; }
-        .section-header { margin-bottom: 20px; flex-shrink: 0; }
-        .section-title { font-family: 'Space Grotesk', sans-serif; font-size: 24px; font-weight: 700; margin: 0 0 6px; }
-        .section-sub { color: var(--slate); font-size: 13.5px; margin: 0; }
-        .search-bar { display: flex; align-items: center; gap: 10px; background: var(--paper-card); border: 1px solid var(--line); border-radius: 10px; padding: 10px 14px; margin-bottom: 16px; flex-shrink: 0; }
-        .search-icon { color: var(--slate); }
-        .search-input { border: none; background: transparent; outline: none; flex: 1; font-size: 14px; color: var(--ink); font-family: 'Inter', sans-serif; }
-        .map-strip { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 12px; margin-bottom: 16px; flex-shrink: 0; }
-        .map-node { width: 44px; height: 44px; border-radius: 10px; border: 1px solid var(--line); background: var(--paper-card); display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; }
-        .map-node-active { background: var(--ink); border-color: var(--ink); }
-        .map-code { font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 15px; color: var(--ink); }
-        .map-node-active .map-code { color: var(--paper); }
-        .directory-list, .services-list, .admin-list { display: flex; flex-direction: column; gap: 12px; padding-bottom: 24px; }
-        .directory-card, .service-card, .admin-card { background: var(--paper-card); border: 1px solid var(--line); border-radius: 12px; padding: 16px; }
-        .directory-card-head { display: flex; align-items: center; gap: 12px; width: 100%; border: none; background: transparent; text-align: left; cursor: pointer; padding: 0; color: inherit; }
-        .directory-code { width: 36px; height: 36px; border-radius: 8px; background: var(--paper); display: flex; align-items: center; justify-content: center; font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 14px; flex-shrink: 0; }
-        .directory-meta { flex: 1; min-width: 0; }
-        .directory-name { font-weight: 600; font-size: 15px; }
-        .directory-sub { font-size: 12.5px; color: var(--slate); margin-top: 2px; }
-        .status-pill { font-size: 11.5px; font-weight: 600; padding: 3px 8px; border-radius: 12px; margin-left: auto; flex-shrink: 0; }
-        .status-open { background: var(--sage-bg); color: var(--sage); }
-        .status-closed { background: var(--coral-bg); color: var(--coral); }
-        .chevron { color: var(--slate); transition: transform 0.2s ease; flex-shrink: 0; }
-        .chevron-open { transform: rotate(180deg); }
-        .directory-card-body { margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--line); font-size: 13.5px; }
-        .directory-desc { color: var(--ink-soft); margin: 0 0 10px; line-height: 1.4; }
-        .directory-hours { display: flex; align-items: center; gap: 6px; color: var(--slate); margin-bottom: 12px; font-size: 12.5px; }
-        .room-list { display: flex; flex-direction: column; gap: 6px; }
-        .room-item { display: flex; align-items: center; gap: 8px; color: var(--ink-soft); font-size: 13px; }
-        .service-head { display: flex; gap: 12px; align-items: flex-start; margin-bottom: 12px; }
-        .service-icon { color: var(--amber-dark); flex-shrink: 0; margin-top: 2px; }
-        .service-name { font-weight: 600; font-size: 15.5px; }
-        .service-location { font-size: 12.5px; color: var(--slate); margin-top: 2px; }
-        .service-details { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; padding: 10px; background: var(--paper); border-radius: 8px; }
-        .service-detail-row { display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: var(--ink-soft); }
-        .faq-block { display: flex; flex-direction: column; gap: 8px; }
-        .faq-item { border-top: 1px solid var(--line); padding-top: 8px; }
-        .faq-question { display: flex; justify-content: space-between; align-items: center; width: 100%; border: none; background: transparent; text-align: left; cursor: pointer; padding: 4px 0; font-weight: 500; font-size: 13px; color: var(--ink); font-family: 'Inter', sans-serif; }
-        .faq-answer { font-size: 12.5px; color: var(--slate); margin: 6px 0 4px; line-height: 1.4; }
-        .admin-toggle { display: flex; gap: 8px; margin-bottom: 16px; flex-shrink: 0; }
-        .admin-toggle-btn { padding: 8px 14px; border-radius: 8px; border: 1px solid var(--line); background: var(--paper-card); font-size: 13px; font-weight: 500; cursor: pointer; color: var(--ink); font-family: 'Inter', sans-serif; }
-        .admin-toggle-active { background: var(--ink); color: var(--paper); border-color: var(--ink); }
-        .admin-row { display: flex; gap: 8px; margin-bottom: 8px; align-items: center; }
-        .admin-input { border: 1px solid var(--line); border-radius: 6px; padding: 8px 10px; font-size: 13px; color: var(--ink); outline: none; background: var(--paper); font-family: 'Inter', sans-serif; }
-        .admin-input-code { width: 50px; font-weight: 700; text-align: center; }
-        .admin-textarea { width: 100%; border: 1px solid var(--line); border-radius: 6px; padding: 8px 10px; font-size: 13px; color: var(--ink); outline: none; background: var(--paper); font-family: 'Inter', sans-serif; resize: vertical; min-height: 60px; margin-bottom: 8px; }
-        .admin-add { display: flex; align-items: center; gap: 6px; padding: 10px 14px; border-radius: 8px; border: 1px dashed var(--line); background: transparent; font-size: 13px; font-weight: 600; cursor: pointer; color: var(--amber-dark); justify-content: center; }
-        .admin-add-faq { display: flex; align-items: center; gap: 4px; padding: 4px 8px; border-radius: 4px; border: none; background: var(--paper); font-size: 12px; cursor: pointer; color: var(--ink-soft); margin-top: 6px; }
-        .admin-faqs { margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--line); }
-        .admin-faq-row { display: flex; justify-content: space-between; align-items: center; font-size: 12px; margin-bottom: 6px; background: var(--paper); padding: 6px 8px; border-radius: 4px; }
-        .admin-reset { margin-top: auto; display: flex; align-items: center; gap: 6px; padding: 10px; border: none; background: transparent; color: var(--coral); font-size: 12.5px; cursor: pointer; justify-content: center; font-family: 'Inter', sans-serif; }
-        .icon-btn { border: none; background: transparent; cursor: pointer; padding: 6px; border-radius: 4px; display: flex; align-items: center; justify-content: center; }
-        .icon-btn-danger { color: var(--coral); }
-        .tabbar { display: flex; border-top: 1px solid var(--line); background: var(--paper-card); padding: 8px 0; flex-shrink: 0; }
-        .tab-btn { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; border: none; background: transparent; font-size: 11px; color: var(--slate); cursor: pointer; font-family: 'Inter', sans-serif; }
-        .tab-btn-active { color: var(--amber-dark); font-weight: 600; }
-        .empty-text { color: var(--slate); font-size: 13.5px; text-align: center; padding: 20px 0; }
-      `}</style>
-
       {/* Desktop Sidebar Rail */}
       <div className="rail">
         <div className="rail-brand">
-          <div className="rail-brand-mark">S</div>
-          <span className="rail-brand-text">SmartCampus</span>
+          <div className="rail-brand-mark">
+            <img src={uniMark} alt="Universum International College" />
+          </div>
+          <div>
+            <span className="rail-brand-text">SmartCampus</span>
+            <div className="rail-brand-sub">Universum International College</div>
+          </div>
         </div>
-        <nav className="rail-nav">
-          {TABS.map((t) => {
-            const Icon = t.icon;
-            const active = tab === t.id;
-            return (
-              <button key={t.id} className={`rail-item ${active ? "rail-item-active" : ""}`} onClick={() => setTab(t.id)}>
-                <Icon size={18} />
-                <span>{t.label}</span>
-              </button>
-            );
-          })}
-        </nav>
+    <nav className="rail-nav">
+  {TABS.map((t) => {
+    const Icon = t.icon;
+    const active = tab === t.id;
+    
+    // Check if user is logged in AND is an admin
+    const isAdmin = user && user.email === "kastriotfilipaj533@gmail.com";
+    const label = t.id === "admin" ? (isAdmin ? "Admin" : user ? "Account" : "Login / Register") : t.label;
+
+    return (
+      <button key={t.id} className={`rail-item ${active ? "rail-item-active" : ""}`} onClick={() => setTab(t.id)}>
+        <Icon size={18} />
+        <span>{label}</span>
+      </button>
+    );
+  })}
+</nav>    
         <div className="rail-foot">
           SmartCampus AI<br />Connected to Cloud Firestore
         </div>
@@ -1027,18 +1047,52 @@ export default function App() {
       <div className="main-col">
         {/* Mobile Topbar */}
         <div className="mobile-topbar">
-          <div className="mobile-topbar-mark">S</div>
-          <span className="mobile-topbar-text">SmartCampus AI</span>
+          <div className="mobile-topbar-mark">
+            <img src={uniMark} alt="Universum International College" />
+          </div>
+          <span className="mobile-topbar-text">
+            {TABS.find((t) => t.id === tab)?.label || "SmartCampus"}
+          </span>
         </div>
 
         {/* Dynamic Content View */}
         <div className="content">
           {loading ? (
-            <div className="empty-text">Loading campus data...</div>
+            <div className="loading-state">
+              <div className="spinner" />
+              <span>Loading campus data…</span>
+            </div>
           ) : (
-            <>
+            <div key={tab} className="tab-fade" style={{ display: "flex", flexDirection: "column", flex: 1, minHeight: 0 }}>
               {tab === "ask" && <AskTab buildings={buildings} services={services} />}
-              {tab === "directory" && <DirectoryTab buildings={buildings} />}
+              {tab === "directory" && (
+                <div>
+                  {/* CAMPUS HERO BANNER */}
+                  <div className="directory-hero">
+                    <img src={campusHero} alt="Students on the Universum International College campus" />
+                    <div className="directory-hero-overlay">
+                      <span className="directory-hero-eyebrow">
+                        <MapPin size={12} /> Prishtina Campus
+                      </span>
+                      <h3 className="directory-hero-title">Universum International College</h3>
+                      <p className="directory-hero-sub">Find your way around every building, office, and room — {buildings.length} buildings tracked live.</p>
+                    </div>
+                  </div>
+
+                  {/* MAP BOX */}
+                  <div className="map-box">
+                    <CampusMap buildings={buildings} selectedCode={selectedBuildingCode} />
+                  </div>
+
+                  {/* DIRECTORY LIST */}
+                  <DirectoryTab
+                    buildings={buildings}
+                    services={services}
+                    selectedCode={selectedBuildingCode}
+                    onSelectBuilding={setSelectedBuildingCode}
+                  />
+                </div>
+              )}
               {tab === "services" && <ServicesTab services={services} />}
               {tab === "admin" && (
                 <AdminTab
@@ -1052,23 +1106,28 @@ export default function App() {
                   saveState={saveState}
                 />
               )}
-            </>
+            </div>
           )}
         </div>
 
         {/* Mobile Tabbar Nav */}
-        <div className="tabbar">
-          {TABS.map((t) => {
-            const Icon = t.icon;
-            const active = tab === t.id;
-            return (
-              <button key={t.id} className={`tab-btn ${active ? "tab-btn-active" : ""}`} onClick={() => setTab(t.id)}>
-                <Icon size={18} />
-                <span>{t.label}</span>
-              </button>
-            );
-          })}
-        </div>
+       <div className="tabbar">
+  {TABS.map((t) => {
+    const Icon = t.icon;
+    const active = tab === t.id;
+
+    // Check if user is logged in AND is an admin
+    const isAdmin = user && user.email === "kastriotfilipaj533@gmail.com";
+    const label = t.id === "admin" ? (isAdmin ? "Admin" : user ? "Account" : "Login / Register") : t.label;
+
+    return (
+      <button key={t.id} className={`tab-btn ${active ? "tab-btn-active" : ""}`} onClick={() => setTab(t.id)}>
+        <Icon size={18} />
+        <span>{label}</span>
+      </button>
+    );
+  })}
+</div>
       </div>
     </div>
   );
